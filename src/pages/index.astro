@@ -1,11 +1,88 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
-
 <Layout>
-	<Welcome />
+	<div id="map"></div>
 </Layout>
+
+<style>
+  #map {
+    width: 100%;
+    height: 100vh;
+  }
+</style>
+<script>
+    import maplibregl from 'maplibre-gl';
+    import 'maplibre-gl/dist/maplibre-gl.css';
+    import { Protocol } from 'pmtiles';
+
+    const protocol = new Protocol();
+    maplibregl.addProtocol('pmtiles', protocol.tile.bind(protocol));
+
+    const geojson = {
+        'type': 'FeatureCollection',
+        'features': [
+            {
+                'type': 'Feature',
+                'properties': {
+                    'message': 'Foo',
+                    'iconSize': [200, 200]
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [133, -24]
+                }
+            }
+        ]
+    };
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: '/map-style.json',
+        center: [133, -24],
+        zoom: 4
+    });
+
+    const routeSource: maplibregl.GeoJSONSourceSpecification = {
+        type: 'geojson',
+        data: '/route-merged.geojson'
+    };
+
+    const routeLayer: maplibregl.LineLayerSpecification = {
+        id: 'route',
+        type: 'line',
+        source: 'route',
+        layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+        },
+        paint: {
+            'line-color': '#888',
+            'line-width': 4
+        }
+    };
+
+    // add markers to map
+    geojson.features.forEach((marker) => {
+        // create a DOM element for the marker
+        const el = document.createElement('img');
+        el.className = 'marker';
+        el.src = '/bus-traced.svg';
+        el.style.width = `${marker.properties.iconSize[0]}px`;
+        el.style.height = `${marker.properties.iconSize[1]}px`;
+
+        el.addEventListener('click', () => {
+        window.alert(marker.properties.message);
+        });
+
+        // add marker to map
+        new maplibregl.Marker({element: el})
+        .setLngLat(marker.geometry.coordinates)
+        .addTo(map);
+    });
+
+map.on('load', () => {
+    map.addSource('route', routeSource);
+    map.addLayer(routeLayer);
+});
+</script>
