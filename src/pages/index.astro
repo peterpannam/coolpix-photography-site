@@ -19,70 +19,113 @@ import Layout from '../layouts/Layout.astro';
     const protocol = new Protocol();
     maplibregl.addProtocol('pmtiles', protocol.tile.bind(protocol));
 
-    const geojson = {
+    const markerEl = document.createElement('img');
+    markerEl.src = '/bus-traced.svg';
+    markerEl.style.width = '400px';
+    markerEl.style.height = '400px';
+    const marker = new maplibregl.Marker({ element: markerEl });
+
+    const geojson: GeoJSON.FeatureCollection<GeoJSON.LineString> = {
         'type': 'FeatureCollection',
         'features': [
             {
                 'type': 'Feature',
-                'properties': {
-                    'message': 'Foo',
-                    'iconSize': [200, 200]
-                },
+                'properties': {},
                 'geometry': {
-                    'type': 'Point',
-                    'coordinates': [133, -24]
+                    'type': 'LineString',
+                    'coordinates': [[0, 0]]
                 }
             }
         ]
     };
 
+    const animationDuration = 30000; // ms to draw the full route
+    let animation: number;
+    let animationMarker: number;
+    let startTime = 0;
+    let progress = 0;
+    let resetTime = false;
+    let routeCoordinates: number[][] = [];
+
     const map = new maplibregl.Map({
         container: 'map',
         style: '/map-style.json',
         center: [133, -24],
-        zoom: 4
+        zoom: 4.5
     });
 
-    const routeSource: maplibregl.GeoJSONSourceSpecification = {
-        type: 'geojson',
-        data: '/route-merged.geojson'
-    };
+    map.on('load', async () => {
+        const response = await fetch('/route-merged.geojson');
+        const routeData = await response.json();
 
-    const routeLayer: maplibregl.LineLayerSpecification = {
-        id: 'route',
-        type: 'line',
-        source: 'route',
-        layout: {
-            'line-join': 'round',
-            'line-cap': 'round'
-        },
-        paint: {
-            'line-color': '#888',
-            'line-width': 4
+        const flatten = (geometry: any) => {
+            if (geometry.type === 'LineString') {
+                routeCoordinates.push(...geometry.coordinates);
+            } else if (geometry.type === 'MultiLineString') {
+                geometry.coordinates.forEach((line: number[][]) => routeCoordinates.push(...line));
+            }
+        };
+        if (routeData.type === 'FeatureCollection') {
+            routeData.features.forEach((f: any) => flatten(f.geometry));
+        } else if (routeData.type === 'Feature') {
+            flatten(routeData.geometry);
+        } else {
+            flatten(routeData);
         }
-    };
 
-    // add markers to map
-    geojson.features.forEach((marker) => {
-        // create a DOM element for the marker
-        const el = document.createElement('img');
-        el.className = 'marker';
-        el.src = '/bus-traced.svg';
-        el.style.width = `${marker.properties.iconSize[0]}px`;
-        el.style.height = `${marker.properties.iconSize[1]}px`;
+        geojson.features[0].geometry.coordinates = [routeCoordinates[0]];
 
-        el.addEventListener('click', () => {
-        window.alert(marker.properties.message);
+        map.addSource('line', {
+            'type': 'geojson',
+            'data': geojson
         });
 
-        // add marker to map
-        new maplibregl.Marker({element: el})
-        .setLngLat(marker.geometry.coordinates)
-        .addTo(map);
-    });
+        map.addLayer({
+            'id': 'line-animation',
+            'type': 'line',
+            'source': 'line',
+            'layout': {
+                'line-cap': 'round',
+                'line-join': 'round'
+            },
+            'paint': {
+                'line-color': '#ed6498',
+                'line-width': 5,
+                'line-opacity': 0.8
+            }
+        });
 
-map.on('load', () => {
-    map.addSource('route', routeSource);
-    map.addLayer(routeLayer);
-});
+        marker.setLngLat(routeCoordinates[0] as [number, number]).addTo(map);
+
+        startTime = performance.now();
+        animation = requestAnimationFrame(animateLine);
+        animationMarker = requestAnimationFrame(animateMarker);
+
+        document.addEventListener('visibilitychange', () => {
+            resetTime = true;
+        });
+
+        function animateLine(timestamp: DOMHighResTimeStamp) {
+            progress = timestamp - startTime;
+
+            const t = Math.min(progress / animationDuration, 1);
+            const coordIndex = Math.max(1, Math.floor(t * routeCoordinates.length));
+            geojson.features[0].geometry.coordinates = routeCoordinates.slice(0, coordIndex);
+            (map.getSource('line') as maplibregl.GeoJSONSource).setData(geojson);
+
+            if (t < 1) {
+                animation = requestAnimationFrame(animateLine);
+            }
+        }
+
+        function animateMarker(timestamp: DOMHighResTimeStamp) {
+            const t = Math.min((timestamp - startTime) / animationDuration, 1);
+            const coordIndex = Math.max(1, Math.floor(t * routeCoordinates.length)) - 1;
+            marker.setLngLat(routeCoordinates[coordIndex] as [number, number]);
+
+            if (t < 1) {
+                animationMarker = requestAnimationFrame(animateMarker);
+            }
+        }        
+    });
 </script>
