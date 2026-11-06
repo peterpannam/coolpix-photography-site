@@ -1,23 +1,25 @@
+---
+import '../styles/main.css';
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+const { title = 'Walkabout', description = 'Photographs from a journey around Australia.' } = Astro.props;
+---
+
 <!doctype html>
-<html lang="en">
+<html lang="en-AU">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content={description} />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<title>{title}</title>
 	</head>
 	<body>
 		<slot />
 	</body>
 </html>
-
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>

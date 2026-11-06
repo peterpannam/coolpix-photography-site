@@ -1,0 +1,254 @@
+---
+/**
+ * The journey map with its region strip and place panel (D3 + SVG; see src/lib/map/map.ts).
+ * Base layers and the route come from src/data (built by scripts/geo); places are passed in, already located on
+ * the journey with placeOnJourney() at build time.
+ */
+import journey from '../data/journey.json';
+import type { PlacedPlace } from '../lib/map/types';
+import { fmtKm } from '../lib/map/format';
+
+interface Props {
+  places: PlacedPlace[];
+  /** Where distances are measured from */
+  startName?: string;
+  /** Show a "sample photos" tag while the places are placeholders */
+  sample?: boolean;
+}
+const { places, startName = 'Melbourne', sample = false } = Astro.props;
+// JSON inside <script>: escape "<" so the data can never close the tag
+const placesJson = JSON.stringify(places).replace(/</g, '\\u003c');
+---
+
+<div class="wk" data-map-gallery data-start={startName}>
+  <div class="stage" data-ref="stage">
+    <h1 class="sr-only">Walkabout: photographs from a {fmtKm(journey.totalKm)} km journey around Australia</h1>
+    <svg class="map" data-ref="svg" aria-hidden="true" focusable="false"></svg>
+
+    <div class="map-ui top-left">
+      <button class="tp-btn tp-btn--mono picker-btn" data-ref="picker-button" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="wk-picker">
+        All locations
+        <svg width="10" height="6" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" fill="none" stroke-width="1.3"></path></svg>
+      </button>
+      <div class="picker" id="wk-picker" data-ref="picker" role="dialog" aria-label="Find a location">
+        <div class="picker-search">
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="6" cy="6" r="4.5" stroke="currentColor" fill="none" stroke-width="1.3"></circle><path d="M9.5 9.5L13 13" stroke="currentColor" stroke-width="1.3"></path></svg>
+          <input data-ref="picker-input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="true" aria-controls="wk-picker-list" placeholder="Search places or regions" autocomplete="off" />
+        </div>
+        <ul class="picker-list" id="wk-picker-list" data-ref="picker-list" role="listbox" aria-label="Locations"></ul>
+      </div>
+    </div>
+
+    <div class="map-ui top-right">
+      <span class="hint tp-label">Click a dot, line or state · scroll to zoom</span>
+      {sample && <span class="tp-label sample-tag">Sample photos</span>}
+      <label class="motion tp-label"><input type="checkbox" data-ref="reduce-motion" /> Reduce motion</label>
+    </div>
+
+    <div class="map-ui bottom-left" role="group" aria-label="Map zoom">
+      <button class="zoom-btn" data-ref="zoom-in" type="button" aria-label="Zoom in"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1v12M1 7h12"></path></svg></button>
+      <button class="zoom-btn" data-ref="zoom-out" type="button" aria-label="Zoom out"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M1 7h12"></path></svg></button>
+      <button class="zoom-btn" data-ref="zoom-reset" type="button" aria-label="Show all of Australia"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M1 5V1h4M9 1h4v4M13 9v4H9M5 13H1V9"></path></svg></button>
+    </div>
+
+    <div class="map-ui bottom-right" aria-hidden="true">
+      <svg class="scalebar" data-ref="scalebar" width="101" height="10"><line class="scale-line" x1="0" y1="7" x2="100" y2="7"></line><line x1="0.5" y1="3" x2="0.5" y2="10"></line><line class="scale-r" x1="99.5" y1="3" x2="99.5" y2="10"></line></svg>
+      <span class="tp-label" data-ref="scale-text">500 km</span>
+    </div>
+
+    <div class="tooltip" data-ref="tooltip" aria-hidden="true"><strong></strong><span></span></div>
+
+    <aside class="panel" data-ref="panel" aria-labelledby="wk-panel-title" inert>
+      <div class="panel-head">
+        <span class="tp-label" data-ref="panel-eyebrow"></span>
+        <button class="icon-btn" data-ref="panel-close" type="button" aria-label="Close"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"></path></svg></button>
+      </div>
+      <div class="panel-body">
+        <div class="strip" data-ref="panel-strip"></div>
+        <h2 id="wk-panel-title" data-ref="panel-title" tabindex="-1"></h2>
+        <dl class="meta" data-ref="panel-meta"></dl>
+        <p class="story" data-ref="panel-story"></p>
+        <div class="links" data-ref="panel-links"></div>
+      </div>
+      <div class="panel-foot">
+        <button class="step" data-ref="panel-prev" type="button"><span class="tp-label">Previous</span><span class="step-name"></span></button>
+        <button class="step" data-ref="panel-next" type="button"><span class="tp-label">Next</span><span class="step-name"></span></button>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="legend">
+    <span class="tp-label legend-label" data-ref="legend-label">The journey</span>
+    <ul class="regions" data-ref="regions"></ul>
+  </footer>
+  <div class="sr-only" data-ref="live" aria-live="polite"></div>
+  <script type="application/json" data-ref="places" set:html={placesJson} />
+</div>
+
+<script>
+  import type { Topology } from 'topojson-specification';
+  import { initMap } from '../lib/map/map';
+  import type { Journey, PlacedPlace } from '../lib/map/types';
+  import topo from '../data/australia.topo.json';
+  import journey from '../data/journey.json';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-map-gallery]')) {
+    const places = JSON.parse(root.querySelector('[data-ref="places"]')?.textContent || '[]') as PlacedPlace[];
+    initMap(root, {
+      topo: topo as unknown as Topology,
+      journey: journey as unknown as Journey,
+      places,
+      startName: root.dataset.start,
+    });
+  }
+</script>
+
+<style is:global>
+  /* Global because D3 creates most of these elements at runtime; everything is scoped under .wk.
+     Colours, type and motion come from the toppixel tokens in src/styles/main.css. */
+  .wk {
+    --wk-land: var(--tp-bg-panel);
+    --wk-land-hover: var(--tp-bg);
+    --wk-sea: var(--tp-bg-soft);
+    --wk-rule: var(--tp-muted);
+    --wk-hairline: var(--tp-line-strong);
+    position: relative;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    min-height: 0;
+    color: var(--tp-ink);
+  }
+  .wk .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wk :focus-visible { outline: 2px solid var(--tp-ink); outline-offset: 2px; }
+
+  /* Map stage */
+  .wk .stage { position: relative; overflow: hidden; min-height: 420px; background: var(--wk-sea); }
+  .wk .map { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; }
+  .wk .map:active { cursor: grabbing; }
+  .wk .sea { fill: var(--wk-sea); }
+  .wk .state { fill: var(--wk-land); cursor: pointer; transition: fill .25s; }
+  .wk .state:hover { fill: var(--wk-land-hover); }
+  .wk .coast { fill: none; stroke: var(--tp-ink); stroke-width: .9px; vector-effect: non-scaling-stroke; pointer-events: none; }
+  .wk .borders { fill: none; stroke: var(--wk-rule); stroke-width: .8px; stroke-dasharray: 3 2.5; vector-effect: non-scaling-stroke; pointer-events: none; }
+  .wk .region-borders { fill: none; stroke: var(--wk-rule); stroke-width: .7px; stroke-dasharray: .5 3; stroke-linecap: round; vector-effect: non-scaling-stroke; pointer-events: none; opacity: 0; transition: opacity .4s; }
+  .wk .show-regions .region-borders { opacity: 1; }
+  .wk .route-line { fill: none; stroke: var(--tp-ink); stroke-width: 1.3px; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; pointer-events: none; transition: stroke .35s, stroke-width .35s; }
+  .wk .route-hit { fill: none; stroke: transparent; stroke-width: 14px; vector-effect: non-scaling-stroke; cursor: pointer; }
+  .wk .has-active .route:not(.is-active):not(.is-preview) .route-line { stroke: var(--wk-rule); stroke-width: .9px; }
+  .wk .route.is-active .route-line, .wk .route.is-preview .route-line { stroke-width: 2px; }
+
+  .wk .state-label { font: 500 10px var(--tp-font-mono); letter-spacing: .22em; fill: var(--tp-muted); text-anchor: middle; pointer-events: none; transition: opacity .4s; }
+  .wk .sea-label { font: italic 13px var(--tp-font-display); letter-spacing: .06em; fill: var(--tp-muted); text-anchor: middle; pointer-events: none; }
+  .wk .is-deep .state-label { opacity: 0; }
+
+  .wk .place { cursor: pointer; }
+  .wk .place .hit { fill: transparent; }
+  .wk .place .dot { fill: var(--tp-ink); stroke: var(--wk-land); stroke-width: 1.5px; transition: fill .3s; }
+  .wk .place .ring { fill: none; stroke: var(--tp-ink); stroke-width: 1px; opacity: 0; transition: opacity .3s; }
+  .wk .place.is-selected .ring, .wk .place.is-hover .ring { opacity: 1; }
+  .wk .has-active .place:not(.in-region) .dot { fill: var(--wk-rule); }
+  .wk .has-active .place:not(.in-region) { pointer-events: none; }
+  .wk .place .label { font: 500 10px var(--tp-font-mono); letter-spacing: .08em; fill: var(--tp-ink); paint-order: stroke; stroke: var(--wk-land); stroke-width: 3px; stroke-linejoin: round; opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .wk .place.show-label .label { opacity: 1; pointer-events: auto; }
+
+  .wk .leader { stroke: var(--tp-ink-soft); stroke-width: .6px; pointer-events: none; }
+  .wk .chip { cursor: pointer; }
+  .wk .chip rect { fill: var(--wk-land); stroke: var(--tp-ink); stroke-width: .75px; transition: fill .2s; }
+  .wk .chip text { font: 500 10px var(--tp-font-mono); letter-spacing: .08em; fill: var(--tp-ink); transition: fill .2s; }
+  .wk .chip.is-hover rect, .wk .chip.is-selected rect { fill: var(--tp-ink); }
+  .wk .chip.is-hover text, .wk .chip.is-selected text { fill: var(--wk-land); }
+  .wk .leaders, .wk .chips { transition: opacity .3s; }
+  .wk .is-moving .leaders, .wk .is-moving .chips { opacity: 0; transition-duration: .12s; pointer-events: none; }
+  .wk .is-moving .place .label { opacity: 0; transition-duration: .12s; }
+
+  /* Map controls */
+  .wk .map-ui { position: absolute; z-index: 3; display: flex; gap: 8px; }
+  .wk .top-left { top: 16px; left: 16px; flex-direction: column; align-items: flex-start; }
+  .wk .top-right { top: 16px; right: 16px; align-items: center; gap: 10px; transition: opacity .3s; }
+  .wk .top-right > * { background: var(--wk-land); padding: 6px 9px; border: 1px solid var(--wk-hairline); }
+  .wk .stage.panel-open .top-right { opacity: 0; pointer-events: none; }
+  .wk .bottom-left { bottom: 16px; left: 16px; flex-direction: column; gap: 0; border: 1px solid var(--tp-ink); background: var(--wk-land); }
+  .wk .bottom-right { bottom: 16px; right: 16px; align-items: center; gap: 8px; }
+  .wk .picker-btn { gap: 10px; padding: 9px 14px; background: var(--wk-land); }
+  .wk .picker-btn:hover, .wk .picker-btn[aria-expanded="true"] { background: var(--tp-ink); color: var(--tp-bg); }
+  .wk .picker-btn svg { display: inline-block; }
+  .wk .zoom-btn { width: 34px; height: 34px; display: grid; place-items: center; }
+  .wk .zoom-btn + .zoom-btn { border-top: 1px solid var(--wk-hairline); }
+  .wk .zoom-btn:hover:not(:disabled) { background: var(--tp-ink); color: var(--tp-bg); }
+  .wk .zoom-btn:disabled { color: var(--wk-hairline); cursor: default; }
+  .wk .zoom-btn svg, .wk .icon-btn svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 1.4; fill: none; }
+  .wk .scalebar line { stroke: var(--tp-ink); stroke-width: 1; }
+  .wk .motion { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .wk .motion input { accent-color: var(--tp-ink); margin: 0; }
+
+  /* Location picker */
+  .wk .picker { width: min(320px, calc(100vw - 32px)); background: var(--wk-land); border: 1px solid var(--tp-ink); box-shadow: var(--tp-shadow-card); display: none; flex-direction: column; max-height: min(460px, calc(100% - 80px)); }
+  .wk .picker.is-open { display: flex; }
+  .wk .picker-search { display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid var(--wk-hairline); }
+  .wk .picker-search input { flex: 1; border: 0; background: transparent; height: 40px; font: var(--tp-text-base) var(--tp-font-body); outline: none; }
+  .wk .picker-list { list-style: none; margin: 0; padding: 4px 0 8px; overflow-y: auto; }
+  .wk .picker-group { padding: 12px 14px 4px; }
+  .wk .picker-option { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 7px 14px; cursor: pointer; }
+  .wk .picker-option .opt-meta { font: var(--tp-mono-md) var(--tp-font-mono); color: var(--tp-muted); letter-spacing: .06em; font-variant-numeric: tabular-nums; }
+  .wk .picker-option.is-active, .wk .picker-option:hover { background: var(--tp-ink); color: var(--tp-bg); }
+  .wk .picker-option.is-active .opt-meta, .wk .picker-option:hover .opt-meta { color: var(--tp-muted-dark); }
+  .wk .picker-empty { padding: 12px 14px; color: var(--tp-muted); }
+
+  /* Tooltip */
+  .wk .tooltip { position: absolute; z-index: 4; pointer-events: none; background: var(--tp-ink); color: var(--tp-bg); padding: 7px 10px 8px; transform: translate(-50%, calc(-100% - 14px)); white-space: nowrap; opacity: 0; transition: opacity .15s; }
+  .wk .tooltip.is-visible { opacity: 1; }
+  .wk .tooltip strong { display: block; font: 500 var(--tp-mono-md) var(--tp-font-mono); letter-spacing: .1em; text-transform: uppercase; }
+  .wk .tooltip span { display: block; font: var(--tp-mono-md) var(--tp-font-mono); color: var(--tp-muted-dark); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+
+  /* Detail panel: slides over the map from the right (a bottom sheet on phones) */
+  .wk .panel { position: absolute; z-index: 5; top: 0; right: 0; bottom: 0; width: clamp(320px, 36vw, var(--tp-panel-width)); background: var(--tp-bg-panel); box-shadow: none; transform: translateX(101%); transition: transform var(--tp-dur-slow) var(--tp-ease), box-shadow var(--tp-dur-slow); display: flex; flex-direction: column; }
+  .wk .panel.is-open { transform: none; box-shadow: var(--tp-shadow-panel); }
+  .wk .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--tp-line); }
+  .wk .icon-btn { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 999px; background: rgba(0, 0, 0, .06); }
+  .wk .icon-btn:hover { background: rgba(0, 0, 0, .12); }
+  .wk .panel-body { overflow-y: auto; flex: 1; padding: 20px 20px 28px; display: flex; flex-direction: column; gap: 18px; }
+  .wk .panel-body > * { flex-shrink: 0; }
+  .wk .strip { display: grid; grid-auto-flow: column; grid-auto-columns: 100%; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: thin; }
+  .wk .strip.is-multi { grid-auto-columns: 86%; }
+  .wk .shot { margin: 0; scroll-snap-align: start; }
+  .wk .shot canvas, .wk .shot img { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; background: var(--tp-placeholder-fine); }
+  .wk .shot figcaption { margin-top: 6px; font: var(--tp-mono-sm) var(--tp-font-mono); letter-spacing: var(--tp-track-label-sm); text-transform: uppercase; color: var(--tp-muted); }
+  .wk .panel h2 { font: 400 var(--tp-text-3xl)/1.05 var(--tp-font-display); letter-spacing: -.5px; margin: 0; text-wrap: balance; }
+  .wk .panel h2:focus { outline: none; }
+  .wk .meta { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; margin: 0; font: 12px var(--tp-font-mono); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+  .wk .meta dt { color: var(--tp-muted); text-transform: uppercase; letter-spacing: var(--tp-track-label-sm); font-size: var(--tp-mono-sm); padding-top: 2px; }
+  .wk .meta dd { margin: 0; }
+  .wk .story { font: italic var(--tp-text-lg)/1.6 var(--tp-font-display); margin: 0; max-width: 34em; }
+  .wk .links { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+  .wk .panel-foot { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--tp-line); }
+  .wk .step { display: flex; flex-direction: column; gap: 2px; padding: 12px 20px 14px; text-align: left; min-width: 0; }
+  .wk .step + .step { border-left: 1px solid var(--tp-line); text-align: right; align-items: flex-end; }
+  .wk .step:hover:not(:disabled) { background: var(--tp-accent-tint); }
+  .wk .step:disabled { cursor: default; opacity: .35; }
+  .wk .step .step-name { font: var(--tp-text-md) var(--tp-font-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+  /* Region strip */
+  .wk .legend { display: flex; align-items: center; gap: 20px; padding: 10px 24px; border-top: 1px solid var(--tp-line-strong); background: var(--tp-bg); overflow-x: auto; }
+  .wk .legend-label { flex: none; }
+  .wk .regions { display: flex; gap: 2px; list-style: none; margin: 0; padding: 0; flex: none; }
+  .wk .state-group { display: flex; align-items: center; padding-left: 14px; margin-left: 8px; border-left: 1px solid var(--tp-line-strong); }
+  .wk .state-group:first-child { padding-left: 0; margin-left: 0; border-left: 0; }
+  .wk .state-tag { border: 1px solid var(--tp-ink); padding: 3px 6px; font: var(--tp-mono-sm) var(--tp-font-mono); letter-spacing: var(--tp-track-label-sm); }
+  .wk .state-tag:hover { background: var(--tp-ink); color: var(--tp-bg); }
+  .wk .region-btn { display: grid; grid-template-rows: auto auto; align-items: center; padding: 6px 10px 7px; border: 1px solid transparent; text-align: left; }
+  .wk .region-btn:hover { border-color: var(--tp-line-strong); }
+  .wk .region-btn[aria-pressed="true"] { border-color: var(--tp-ink); }
+  .wk .region-title { font: var(--tp-text-md)/1.2 var(--tp-font-display); white-space: nowrap; }
+  .wk .region-meta { font: var(--tp-mono-sm) var(--tp-font-mono); letter-spacing: .08em; color: var(--tp-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  @media (max-width: 720px) {
+    .wk .legend { padding: 8px 16px; gap: 12px; }
+    .wk .top-right .hint, .wk .top-right .sample-tag { display: none; }
+    .wk .panel { top: auto; left: 0; width: auto; height: 62%; transform: translateY(101%); }
+    .wk .panel h2 { font-size: var(--tp-text-2xl); }
+    .wk .bottom-right { bottom: 12px; right: 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wk .panel { transition: none; }
+  }
+</style>
