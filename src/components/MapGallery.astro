@@ -22,7 +22,7 @@ const placesJson = JSON.stringify(places).replace(/</g, '\\u003c');
 
 <div class="wk" data-map-gallery data-start={startName}>
   <div class="stage" data-ref="stage">
-    <h1 class="sr-only">Walkabout: photographs from a {fmtKm(journey.totalKm)} km journey around Australia</h1>
+    <h1 class="sr-only">Walkabout: photographs from {fmtKm(journey.totalKm)} km around Australia</h1>
     <svg class="map" data-ref="svg" aria-hidden="true" focusable="false"></svg>
 
     <div class="map-ui top-left">
