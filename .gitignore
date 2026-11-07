@@ -22,3 +22,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# large geodata inputs for scripts/geo (see README)
+data-raw/

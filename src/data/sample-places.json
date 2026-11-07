@@ -1,0 +1,266 @@
+[
+  {
+    "name": "Inverloch",
+    "lon": 145.725,
+    "lat": -38.63,
+    "photos": 1,
+    "print": false,
+    "story": "Anderson Inlet at low tide."
+  },
+  {
+    "name": "Eden",
+    "lon": 149.905,
+    "lat": -37.068,
+    "photos": 2,
+    "print": true,
+    "story": "Twofold Bay from the wharf, first thing."
+  },
+  {
+    "name": "Mallacoota",
+    "lon": 149.754,
+    "lat": -37.557,
+    "photos": 1,
+    "print": false,
+    "story": "The inlet at dusk, about as far east as Victoria goes."
+  },
+  {
+    "name": "Murray Bridge",
+    "lon": 139.275,
+    "lat": -35.12,
+    "photos": 1,
+    "print": false,
+    "story": "Crossing the Murray on the way into Adelaide."
+  },
+  {
+    "name": "Lake Hart",
+    "lon": 136.38,
+    "lat": -31.17,
+    "photos": 1,
+    "print": false,
+    "story": "Salt crust to the horizon beside the highway."
+  },
+  {
+    "name": "The Breakaways",
+    "lon": 134.57,
+    "lat": -28.82,
+    "photos": 2,
+    "print": true,
+    "story": "Mesas in bands of white and ochre outside Coober Pedy."
+  },
+  {
+    "name": "Uluru",
+    "lon": 131.036,
+    "lat": -25.345,
+    "photos": 3,
+    "print": true,
+    "story": "In the forty minutes either side of sunset the rock changes colour every few minutes."
+  },
+  {
+    "name": "Emily Gap",
+    "lon": 133.94,
+    "lat": -23.74,
+    "photos": 1,
+    "print": false,
+    "story": "A gap in the East MacDonnell Ranges, just out of Alice."
+  },
+  {
+    "name": "Karlu Karlu",
+    "lon": 134.26,
+    "lat": -20.56,
+    "photos": 3,
+    "print": true,
+    "story": "Granite boulders balanced across the plain."
+  },
+  {
+    "name": "Daly Waters",
+    "lon": 133.37,
+    "lat": -16.254,
+    "photos": 1,
+    "print": false,
+    "story": "The pub ceiling, hung with years of things travellers left behind."
+  },
+  {
+    "name": "Bitter Springs",
+    "lon": 133.087,
+    "lat": -14.915,
+    "photos": 1,
+    "print": false,
+    "story": "Warm, clear water under the pandanus at Mataranka."
+  },
+  {
+    "name": "Mindil Beach",
+    "lon": 130.832,
+    "lat": -12.449,
+    "photos": 2,
+    "print": true,
+    "story": "Sunset at Mindil, with half of Darwin facing west."
+  },
+  {
+    "name": "Timber Creek",
+    "lon": 130.48,
+    "lat": -15.65,
+    "photos": 1,
+    "print": false,
+    "story": "The Victoria River below the escarpment."
+  },
+  {
+    "name": "Lake Kununurra",
+    "lon": 128.725,
+    "lat": -15.785,
+    "photos": 2,
+    "print": true,
+    "story": "Still water on the Ord at dawn."
+  },
+  {
+    "name": "Halls Creek",
+    "lon": 127.67,
+    "lat": -18.23,
+    "photos": 1,
+    "print": false,
+    "story": "Spinifex country, red to the horizon."
+  },
+  {
+    "name": "Fitzroy Crossing",
+    "lon": 125.57,
+    "lat": -18.19,
+    "photos": 1,
+    "print": false,
+    "story": "The Fitzroy River, wide and low in the dry."
+  },
+  {
+    "name": "Cable Beach",
+    "lon": 122.205,
+    "lat": -17.955,
+    "photos": 2,
+    "print": true,
+    "story": "Twenty-two kilometres of sand, and a sunset straight into the Indian Ocean."
+  },
+  {
+    "name": "Eighty Mile Beach",
+    "lon": 121,
+    "lat": -19.75,
+    "photos": 1,
+    "print": false,
+    "story": "A beach that runs for more than two hundred kilometres, almost empty."
+  },
+  {
+    "name": "Dales Gorge",
+    "lon": 118.55,
+    "lat": -22.48,
+    "photos": 3,
+    "print": true,
+    "story": "Banded iron walls dropping into Dales Gorge, Karijini."
+  },
+  {
+    "name": "Coral Bay",
+    "lon": 113.77,
+    "lat": -23.14,
+    "photos": 2,
+    "print": true,
+    "story": "Ningaloo Reef, a few strokes off the beach."
+  },
+  {
+    "name": "Kalbarri",
+    "lon": 114.16,
+    "lat": -27.71,
+    "photos": 1,
+    "print": false,
+    "story": "Gorge country along the Murchison River."
+  },
+  {
+    "name": "The Pinnacles",
+    "lon": 115.16,
+    "lat": -30.6,
+    "photos": 2,
+    "print": true,
+    "story": "Limestone pillars on yellow sand in Nambung National Park."
+  },
+  {
+    "name": "Valley of the Giants",
+    "lon": 116.87,
+    "lat": -34.98,
+    "photos": 2,
+    "print": true,
+    "story": "Walking the canopy among the red tingle trees."
+  },
+  {
+    "name": "Albany",
+    "lon": 117.88,
+    "lat": -35.02,
+    "photos": 1,
+    "print": false,
+    "story": "Southern Ocean swell on the granite coast."
+  },
+  {
+    "name": "Esperance",
+    "lon": 121.89,
+    "lat": -33.86,
+    "photos": 2,
+    "print": true,
+    "story": "White sand and very blue water."
+  },
+  {
+    "name": "90 Mile Straight",
+    "lon": 125.01,
+    "lat": -32.329,
+    "photos": 1,
+    "print": false,
+    "story": "Australia’s longest straight stretch of road: 146.6 km without a bend."
+  },
+  {
+    "name": "Bunda Cliffs",
+    "lon": 130.4,
+    "lat": -31.62,
+    "photos": 2,
+    "print": true,
+    "story": "Where the Nullarbor stops abruptly at the Southern Ocean."
+  },
+  {
+    "name": "Camooweal",
+    "lon": 138.12,
+    "lat": -19.92,
+    "photos": 1,
+    "print": false,
+    "story": "Over the border into Queensland."
+  },
+  {
+    "name": "Mount Isa",
+    "lon": 139.49,
+    "lat": -20.73,
+    "photos": 1,
+    "print": false,
+    "story": "The mine stacks over town at dusk."
+  },
+  {
+    "name": "Normanton",
+    "lon": 141.07,
+    "lat": -17.67,
+    "photos": 1,
+    "print": false,
+    "story": "Gulf country: flat, wide and very hot."
+  },
+  {
+    "name": "Undara Lava Tubes",
+    "lon": 144.6,
+    "lat": -18.2,
+    "photos": 2,
+    "print": true,
+    "story": "Inside the lava tubes at Undara."
+  },
+  {
+    "name": "Millaa Millaa Falls",
+    "lon": 145.61,
+    "lat": -17.5,
+    "photos": 2,
+    "print": true,
+    "story": "A clean single drop into a round pool."
+  },
+  {
+    "name": "Cairns Esplanade",
+    "lon": 145.78,
+    "lat": -16.92,
+    "photos": 1,
+    "print": false,
+    "story": "Journey’s end."
+  }
+]
