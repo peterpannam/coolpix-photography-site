@@ -16,6 +16,7 @@ export default defineConfig({
     sanity({
       projectId: PUBLIC_SANITY_PROJECT_ID,
       dataset: PUBLIC_SANITY_DATASET,
+      apiVersion: '2026-11-07',
       useCdn: false,
     }),
     react()
