@@ -1,6 +1,8 @@
 # coolpix-photography-site
 photography website for my father
 
+The Astro site is in `web/`. Run its commands from there, and read the paths below as relative to it.
+
 ## The map
 
 The home page is a D3 + SVG map of the trip (`src/components/MapGallery.astro`, logic in `src/lib/map/`).
