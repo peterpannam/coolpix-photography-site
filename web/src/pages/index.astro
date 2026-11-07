@@ -4,13 +4,15 @@ import MapGallery from '../components/MapGallery.astro';
 import { placeOnJourney } from '../lib/map/locate';
 import type { Journey, PlaceInput } from '../lib/map/types';
 import { fmtKm } from '../lib/map/format';
+import { getPlaces } from '../sanity/places';
 import journeyData from '../data/journey.json';
 import samplePlaces from '../data/sample-places.json';
 
 const journey = journeyData as unknown as Journey;
-// Sample landmarks along the route until the Sanity photo documents exist; swap in a query that returns
-// { name, lon, lat, photos, print, story, storyHref, printHref, images } for each place.
-const places = placeOnJourney(samplePlaces as PlaceInput[], journey);
+// Sample landmarks along the route until the first places are published in Sanity
+const published = await getPlaces();
+const sample = published.length === 0;
+const places = placeOnJourney(sample ? (samplePlaces as PlaceInput[]) : published, journey);
 ---
 
 <Layout title="Walkabout">
@@ -20,7 +22,7 @@ const places = placeOnJourney(samplePlaces as PlaceInput[], journey);
       <span class="tp-label">{fmtKm(journey.totalKm)} km around Australia</span>
     </header>
     <main class="page-main">
-      <MapGallery places={places} sample />
+      <MapGallery places={places} sample={sample} />
     </main>
   </div>
 </Layout>

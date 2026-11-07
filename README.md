@@ -1,6 +1,12 @@
 # coolpix-photography-site
 photography website for my father
 
+The Astro site is in `web/`. Run its commands from there, and read the paths below as relative to it.
+
+The standalone Sanity Studio is in `studio/`. Start it with `npm run dev` from that folder. After changing the schema
+or a query, run `npm run typegen` there, and `npx sanity schemas deploy` for schema changes. The map shows sample
+places until the first place is published, and the site needs rebuilding to pick up new content.
+
 ## The map
 
 The home page is a D3 + SVG map of the trip (`src/components/MapGallery.astro`, logic in `src/lib/map/`).
