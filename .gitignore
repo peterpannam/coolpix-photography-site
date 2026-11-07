@@ -25,3 +25,5 @@ pnpm-debug.log*
 
 # large geodata inputs for scripts/geo (see README)
 data-raw/
+.claude
+.agents
