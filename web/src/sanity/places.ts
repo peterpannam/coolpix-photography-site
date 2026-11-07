@@ -1,5 +1,5 @@
 import { defineQuery } from 'groq';
-import { sanityClient } from 'sanity:client';
+import { client } from './client';
 import type { PlaceInput } from '../lib/map/types';
 
 const PLACES_QUERY = defineQuery(`*[_type == "place" && defined(name) && defined(location)] | order(name asc) {
@@ -16,7 +16,7 @@ const PLACES_QUERY = defineQuery(`*[_type == "place" && defined(name) && defined
 
 /** Published places, in the shape the map takes */
 export async function getPlaces(): Promise<PlaceInput[]> {
-  const places = await sanityClient.fetch(PLACES_QUERY);
+  const places = await client.fetch(PLACES_QUERY);
   return places.map((p) => ({
     name: p.name!,
     lon: p.lon!,
